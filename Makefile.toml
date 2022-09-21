@@ -1,0 +1,44 @@
+[env]
+OVMF_DIR = "/usr/share/ovmf"
+
+[tasks.run]
+run_task = "qemu"
+
+[tasks.build-disk]
+run_task = { name = "build-disk-init", fork = true, cleanup_task = "umount" }
+
+[tasks.build-disk-init]
+script = '''
+qemu-img create -f raw disk.img 200M
+mkfs.fat -n "MUSIX OS" -s 2 -f 2 -F 32 -R 32 disk.img
+
+mkdir -p ./mnt
+sudo mount -o loop disk.img ./mnt
+
+sudo mkdir -p ./mnt/EFI/BOOT
+sudo cp ./target/x86_64-unknown-uefi/debug/rust-os.efi ./mnt/EFI/BOOT/BOOTX64.EFI
+'''
+
+[tasks.prepare-ovmf]
+script = '''
+mkdir -p ./uefi-firmware
+cp ${OVMF_DIR}/OVMF_CODE.fd ${OVMF_DIR}/OVMF_VARS.fd ./uefi-firmware/
+'''
+
+[tasks.qemu]
+dependencies = ["build-disk"]
+script = '''
+qemu-system-x86_64 \
+    -m 1G \
+    -drive if=pflash,format=raw,file=./uefi-firmware/OVMF_CODE.fd \
+    -drive if=pflash,format=raw,file=./uefi-firmware/OVMF_VARS.fd \
+    -drive format=raw,media=disk,index=0,file=disk.img \
+    -device nec-usb-xhci,id=xhci \
+    -device usb-mouse -device usb-kbd \
+    -device isa-debug-exit \
+    -monitor stdio \
+    -display gtk
+'''
+
+[tasks.umount]
+script = "sudo umount ./mnt && rmdir ./mnt"
