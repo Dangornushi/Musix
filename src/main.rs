@@ -6,8 +6,8 @@
 extern crate alloc;
 
 use core::arch::asm;
-use core::mem;
 use core::fmt::Write;
+use core::mem;
 use log::info;
 use uefi::prelude::*;
 use uefi::proto::media::file::{File, FileAttribute, FileMode, FileType};
@@ -20,8 +20,22 @@ fn efi_main(image: Handle, mut st: SystemTable<Boot>) -> Status {
 
     writeln!(&mut st.stdout(), "Hello, Musix!!\n").unwrap();
 
+    let mapSize = st.boot_services().memory_map_size().map_size;
+    let mut mapBuffer = vec![0; mapSize * 8];
+    info!("mapBuffer size: {}", mapSize);
+
+    let (mapKey, descItr) = st.boot_services().memory_map(&mut mapBuffer).unwrap();
+
+    let descriptors = descItr.copied().collect::<alloc::vec::Vec<_>>();
+    descriptors.iter().for_each(|descriptor| {
+        info!(
+            "{:?}, {}, {}, {}",
+            descriptor.ty, descriptor.phys_start, descriptor.virt_start, descriptor.page_count
+        );
+    });
+
     loop {
-        unsafe{
+        unsafe {
             asm!("hlt");
         }
     }
