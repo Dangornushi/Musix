@@ -1,0 +1,4 @@
+[env]
+TARGET_DIR = "./target/x86_64-unknown-uefi"
+
+[tasks.build]
