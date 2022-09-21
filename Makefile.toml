@@ -2,6 +2,7 @@
 OVMF_DIR = "/usr/share/ovmf"
 
 [tasks.run]
+dependencies = ["build"]
 run_task = "qemu"
 
 [tasks.build-disk]
@@ -26,6 +27,7 @@ cp ${OVMF_DIR}/OVMF_CODE.fd ${OVMF_DIR}/OVMF_VARS.fd ./uefi-firmware/
 '''
 
 [tasks.qemu]
+# dependenciesに"prepare-ovmf"を入れるとローカルからOVMFを引っ張ってきてくれる
 dependencies = ["build-disk"]
 script = '''
 qemu-system-x86_64 \
