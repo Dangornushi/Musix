@@ -1,2 +1,4 @@
 /target
 disk.img
+.DS_Store
+.git-token
