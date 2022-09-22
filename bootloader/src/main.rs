@@ -14,6 +14,26 @@ use uefi::proto::media::file::{File, FileAttribute, FileMode, FileType};
 use uefi::table::boot::MemoryDescriptor;
 use uefi::table::runtime::ResetType;
 use alloc::vec::Vec;
+use uefi::proto::loaded_image::LoadedImage;
+use uefi::proto::media::fs::SimpleFileSystem;
+
+// Load kernel
+fn load_kernel(boot_services: &BootServices, image: Handle) {
+    unsafe{
+        let loaded_image = boot_services.handle_protocol::<LoadedImage>(image).unwrap().get();
+        let device = unsafe{(*loaded_image).device()};
+        let file_system = boot_services.handle_protocol::<SimpleFileSystem>(device).unwrap().get();
+        let mut root_dir = unsafe{(*file_system).open_volume().unwrap()};
+        let mut buf = vec![0; 4096];
+
+        let res = root_dir.read_entry(&mut buf).unwrap();
+        log::info!("{:?}", res);
+        let res = root_dir.read_entry(&mut buf).unwrap();
+        log::info!("{:?}", res);
+        let res = root_dir.read_entry(&mut buf).unwrap();
+        log::info!("{:?}", res);
+    };
+}
 
 // Get memory map -> memorymap vec
 fn get_memory_map(boot_services: &BootServices) -> Vec<MemoryDescriptor> {
@@ -40,6 +60,8 @@ fn efi_main(image: Handle, mut st: SystemTable<Boot>) -> Status {
             descriptor.ty, descriptor.phys_start, descriptor.virt_start, descriptor.page_count
         );
     });
+
+    load_kernel(st.boot_services(), image);
 
     loop {
         unsafe {
