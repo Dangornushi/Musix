@@ -15,7 +15,13 @@ dependencies = ["build"]
 run_task = "qemu"
 
 [tasks.disk]
-run_task = {name = ["disk-create", "disk-mount", "disk-copy"], fork = true, cleanup_task = "disk-umount"}
+run_task = {name = ["disk-rm", "disk-create", "disk-mount", "disk-copy"], fork = true, cleanup_task = "disk-umount"}
+
+[tasks.disk-rm]
+ignore_errors = true
+script = '''
+rm disk.img
+'''
 
 [tasks.disk-create]
 script = '''
@@ -33,6 +39,11 @@ sudo mount -o loop disk.img ./mnt
 
 [tasks.disk-mount.mac]
 script = '''
+#!/usr/bin/env bash
+mkdir -p ./mnt
+disk=$(hdiutil attach -nomount disk.img)
+echo $disk
+mount_msdos $disk ./mnt
 '''
 
 [tasks.disk-copy]
@@ -64,5 +75,24 @@ qemu-system-x86_64 \
     -display gtk
 '''
 
+[tasks.qemu.mac]
+# dependenciesに"prepare-ovmf"を入れるとローカルからOVMFを引っ張ってきてくれる
+dependencies = ["disk"]
+script = '''
+qemu-system-x86_64 \
+    -m 1G \
+    -drive if=pflash,format=raw,file=./uefi-firmware/OVMF_CODE.fd \
+    -drive if=pflash,format=raw,file=./uefi-firmware/OVMF_VARS.fd \
+    -drive format=raw,media=disk,index=0,file=disk.img \
+    -device nec-usb-xhci,id=xhci \
+    -device usb-mouse -device usb-kbd \
+    -device isa-debug-exit \
+    -monitor stdio \
+'''
+
 [tasks.disk-umount]
-script = "sudo umount ./mnt && rmdir ./mnt"
+ignore_errors = true
+script = '''
+sudo umount ./mnt && rmdir ./mnt
+'''
+
