@@ -33,7 +33,6 @@ fn load_kernel(boot_services: &BootServices, image: Handle) {
             .unwrap()
             .get();
         let mut root_dir = unsafe { (*file_system).open_volume().unwrap() };
-        let mut buf = vec![0; 4096];
 
         // RegularFile取得
         let mut cstr_buf = [0u16; 32];
@@ -42,8 +41,10 @@ fn load_kernel(boot_services: &BootServices, image: Handle) {
             .open(cstr_file_name, FileMode::Read, FileAttribute::empty())
             .unwrap();
         let mut file = unsafe { RegularFile::new(file_handle) };
+
         // サイズ取得
         let file_size = file.get_boxed_info::<FileInfo>().unwrap().file_size() as usize;
+
         // バッファへの読み込み
         let mut buf = vec![0; file_size];
         file.read(&mut buf);

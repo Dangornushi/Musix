@@ -94,5 +94,6 @@ qemu-system-x86_64 \
 ignore_errors = true
 script = '''
 sudo umount ./mnt && rmdir ./mnt
+hdiutil detach /dev/disk4
 '''
 
