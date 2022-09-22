@@ -29,7 +29,7 @@ const KERNEL_BASE_ADDR: usize = 0x100000;
 const EFI_PAGE_SIZE: usize = 0x1000;
 
 // load elf file (kernel file)
-fn load_elf(boot_services: &BootServices, buf: Vec<u8>) -> usize {
+fn load_kernel(boot_services: &BootServices, buf: Vec<u8>) -> usize {
     let elf = Elf::parse(&buf).unwrap();
 
     let mut dest_start = usize::MAX;
@@ -74,7 +74,7 @@ fn load_elf(boot_services: &BootServices, buf: Vec<u8>) -> usize {
 }
 
 // Load kernel
-fn load_kernel(boot_services: &BootServices, image: Handle) -> usize {
+fn entry_kernel(boot_services: &BootServices, image: Handle) -> usize {
     // open dir
     let loaded_image = unsafe {
         boot_services
@@ -106,7 +106,7 @@ fn load_kernel(boot_services: &BootServices, image: Handle) -> usize {
     let mut buf = vec![0; file_size];
     file.read(&mut buf);
     file.close();
-    load_elf(&boot_services, buf)
+    load_kernel(&boot_services, buf)
 }
 
 // Get memory map -> memorymap vec
@@ -129,7 +129,7 @@ fn efi_main(image: Handle, mut st: SystemTable<Boot>) -> Status {
     let mut descriptors = get_memory_map(st.boot_services());
 
     // elf fileのエントリーポイント
-    let elf_entry = load_kernel(st.boot_services(), image);
+    let elf_entry = entry_kernel(st.boot_services(), image);
 
     // エントリーポイント先のアドレスの関数を作成
     let Musix: extern "sysv64" fn() = unsafe { mem::transmute(elf_entry) };
