@@ -14,6 +14,8 @@ use core::mem;
 use goblin::elf::{program_header, Elf};
 use log::info;
 use uefi::prelude::*;
+use uefi::proto::console::gop;
+use uefi::proto::console::gop::{BltOp, BltPixel, FrameBuffer, GraphicsOutput, PixelFormat};
 use uefi::proto::loaded_image::LoadedImage;
 use uefi::proto::media::file::FileInfo;
 use uefi::proto::media::file::RegularFile;
@@ -29,7 +31,7 @@ const KERNEL_BASE_ADDR: usize = 0x100000;
 const EFI_PAGE_SIZE: usize = 0x1000;
 
 // load elf file (kernel file)
-fn load_elf(boot_services: &BootServices, buf: Vec<u8>) -> usize {
+fn entry_kernel(boot_services: &BootServices, buf: Vec<u8>) -> usize {
     let elf = Elf::parse(&buf).unwrap();
 
     let mut dest_start = usize::MAX;
@@ -106,7 +108,7 @@ fn load_kernel(boot_services: &BootServices, image: Handle) -> usize {
     let mut buf = vec![0; file_size];
     file.read(&mut buf);
     file.close();
-    load_elf(&boot_services, buf)
+    entry_kernel(&boot_services, buf)
 }
 
 // Get memory map -> memorymap vec
@@ -130,6 +132,15 @@ fn efi_main(image: Handle, mut st: SystemTable<Boot>) -> Status {
 
     // elf fileのエントリーポイント
     let elf_entry = load_kernel(st.boot_services(), image);
+
+    // GOP
+    let gop = unsafe {
+        st.boot_services()
+            .locate_protocol::<gop::GraphicsOutput>()
+            .expect_err("Your computer does not support Graphics Output Protocol!")
+    };
+
+    //unsafe { &mut *gop.get() }
 
     // エントリーポイント先のアドレスの関数を作成
     let Musix: extern "sysv64" fn() = unsafe { mem::transmute(elf_entry) };
