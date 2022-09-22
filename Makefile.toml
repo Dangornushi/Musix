@@ -14,17 +14,29 @@ dependencies = [
 dependencies = ["build"]
 run_task = "qemu"
 
-[tasks.build-disk]
-run_task = {name = "build-disk-init", fork = true, cleanup_task = "umount"}
+[tasks.disk]
+run_task = {name = ["disk-create", "disk-mount", "disk-copy"], fork = true, cleanup_task = "disk-umount"}
 
-[tasks.build-disk-init]
+[tasks.disk-create]
 script = '''
+echo "disk-create"
 qemu-img create -f raw disk.img 200M
 mkfs.fat -n "MUSIX OS" -s 2 -f 2 -F 32 -R 32 disk.img
+'''
 
+[tasks.disk-mount.linux]
+script = '''
+echo "disk-mount.linux"
 mkdir -p ./mnt
 sudo mount -o loop disk.img ./mnt
+'''
 
+[tasks.disk-mount.mac]
+script = '''
+'''
+
+[tasks.disk-copy]
+script = '''
 sudo mkdir -p ./mnt/EFI/BOOT
 sudo cp ./bootloader/target/x86_64-unknown-uefi/debug/bootloader.efi ./mnt/EFI/BOOT/BOOTX64.EFI
 sudo cp ./kernel/kernel.elf ./mnt/kernel.elf
@@ -38,7 +50,7 @@ cp ${OVMF_DIR}/OVMF_CODE.fd ${OVMF_DIR}/OVMF_VARS.fd ./uefi-firmware/
 
 [tasks.qemu]
 # dependenciesに"prepare-ovmf"を入れるとローカルからOVMFを引っ張ってきてくれる
-dependencies = ["build-disk"]
+dependencies = ["disk"]
 script = '''
 qemu-system-x86_64 \
     -m 1G \
@@ -52,5 +64,5 @@ qemu-system-x86_64 \
     -display gtk
 '''
 
-[tasks.umount]
+[tasks.disk-umount]
 script = "sudo umount ./mnt && rmdir ./mnt"
