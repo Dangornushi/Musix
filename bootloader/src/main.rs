@@ -5,6 +5,7 @@
 #[macro_use]
 extern crate alloc;
 
+use crate::gop::ModeInfo;
 use alloc::slice;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -27,6 +28,9 @@ use uefi::table::boot::{AllocateType, MemoryType};
 use uefi::table::runtime::ResetType;
 use uefi::CStr16;
 use uefi_services::system_table;
+
+pub mod frame_buffer_config;
+pub use crate::frame_buffer_config::FrameBufferConfig;
 
 const KERNEL_BASE_ADDR: usize = 0x100000;
 const EFI_PAGE_SIZE: usize = 0x1000;
@@ -163,45 +167,40 @@ fn efi_main(image: Handle, mut st: SystemTable<Boot>) -> Status {
     let elf_entry = entry_kernel(bt, image);
 
     // GOP
-    let mut mode: Option<gop::Mode> = None;
+
+    const BYTES_PER_PIXEL: usize = 4;
+
     let gop = if let Ok(gop) = unsafe { bt.locate_protocol::<GraphicsOutput>() } {
         unsafe { &mut *gop.get() }
     } else {
         panic!("no ogp");
     };
 
-    writeln!(&mut st.stdout(), "[ OK ] GOP\n").unwrap();
+    let mode = unsafe { gop.query_mode(0_u32) }.unwrap();
 
-    set_gop_mode(gop);
+    /*
+        let mut config = FrameBufferConfig {
+            frame_buffer: &mut gop.frame_buffer(),
+            horizontal: mode.info().resolution(),
+            vertical: mode.info().resolution(),
+            format: mode.info().pixel_format(),
+        };
+    */
+
+    let mut frame_buffer = gop.frame_buffer();
+    let mut mode_info = *mode.info();
+
     // エントリーポイント先のアドレスの関数を作成
-    let Musix: extern "sysv64" fn(fb: *mut FrameBuffer, mi: *mut gop::ModeInfo) =
+    let Musix: extern "sysv64" fn(frame_buffer: *mut FrameBuffer, mode_info: *mut ModeInfo) =
         unsafe { mem::transmute(elf_entry) };
     writeln!(&mut st.stdout(), "[ OK ] make Musix function adress\n").unwrap();
 
-    const BYTES_PER_PIXEL: usize = 4;
-    let gop = unsafe { &mut (*gop) };
-    let mode = unsafe { gop.query_mode(0_u32) }.unwrap();
-    let mode_info = mode.info();
-    let (horizontal, vertical) = mode_info.resolution();
-    let stride = mode_info.stride();
-    let format = mode_info.pixel_format();
-    let mut fb = unsafe { gop.frame_buffer() };
-    for x in 0..horizontal {
-        for y in 0..vertical {
-            unsafe {
-                fb.write_value((stride * y + x) * BYTES_PER_PIXEL, [0_u8, 255_u8, 255_u8]);
-            }
-        }
-    }
-
-    let mut mi = gop.current_mode_info();
-    let mut fb = gop.frame_buffer();
     // カーネル実行(胸熱)
-    Musix(&mut fb, &mut mi);
-    Status::SUCCESS
+    Musix(&mut frame_buffer, &mut mode_info);
+
+    // UEFIの全機能を停止
+    st.runtime_services()
+        .reset(ResetType::Shutdown, Status::SUCCESS, None)
     /*
-        // UEFIの全機能を停止
-        st.runtime_services()
-            .reset(ResetType::Shutdown, Status::SUCCESS, None)
-    */
+     */
 }
