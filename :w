@@ -1,0 +1,45 @@
+#![no_std]
+#![no_main]
+
+mod graphics;
+
+use crate::graphics::FrameBufferConfig;
+use core::arch::asm;
+use graphics::{FrameBuffer, ModeInfo};
+// 2022/9/21
+// Musix Kernel
+
+#[derive(Copy, Clone, Debug)]
+pub struct PixelColor(pub u8, pub u8, pub u8); // RGB
+
+#[no_mangle]
+pub extern "sysv64" fn kernel_main(frame_buffer_config: *mut FrameBufferConfig) {
+    unsafe {
+        let rgb = PixelColor {
+            0: 0_u8,
+            1: 0_u8,
+            2: 0_u8,
+        };
+        (*frame_buffer_config).(&frame_buffer).as_mut_ptr();
+
+        for x in 0..(*frame_buffer_config).horizontal.0 as usize {
+            for y in 0..(*frame_buffer_config).horizontal.0 as usize {
+                (*frame_buffer_config)
+                    .frame_buffer
+                    .write_value(y + x * 4, [rgb.0, rgb.1, rgb.2])
+            }
+        }
+        loop {
+            asm!("hlt");
+        }
+    }
+}
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {
+        unsafe {
+            asm!("hlt");
+        }
+    }
+}
