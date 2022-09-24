@@ -1,52 +1,36 @@
 #![no_std]
 #![no_main]
+#![feature(lang_items)]
 
-pub mod graphics;
-
+extern crate rlibc;
 use core::arch::asm;
-use graphics::{FrameBuffer, Graphics, ModeInfo};
-// 2022/9/21
-// Musix Kernel
+use core::panic::PanicInfo;
 
-#[derive(Copy, Clone, Debug)]
-pub struct PixelColor(pub u8, pub u8, pub u8); // RGB
+use kernel::graphics::{FrameBuffer, Graphics, ModeInfo, PixelColor};
 
 #[no_mangle]
-pub extern "sysv64" fn kernel_main(frame_buffer: *mut FrameBuffer, mode_info: *mut ModeInfo) {
-    unsafe {
-        let rgb = PixelColor {
-            0: 255_u8,
-            1: 255_u8,
-            2: 255_u8,
-        };
-        /*
-         * Err
-                let mut Console = Graphics::initialize_instance(frame_buffer, mode_info);
-                let mut Console = Graphics { Console };
-                Console.write_actual_pixel(10 + 1, 10 + 1, rgb);
-        */
-        /*
-                frame_buffer_config.frame_buffer.as_mut_ptr();
+extern "C" fn kernel_main(fb: *mut FrameBuffer, mi: *mut ModeInfo) {
+    let fb = unsafe { *fb };
+    let mi = unsafe { *mi };
+    let mut graphics = Graphics::new(fb, mi);
+    let (width, height) = graphics.resolution();
 
-                for x in 0..frame_buffer_config.horizontal.0 as usize {
-                    for y in 0..frame_buffer_config.horizontal.0 as usize {
-                        frame_buffer_config
-                            .frame_buffer
-                            .write_value(y + x * 4, [rgb.0, rgb.1, rgb.2])
-                    }
-                }
-        */
+    unsafe {
+        for y in 0..(height) {
+            for x in 0..(width) {
+                graphics.write_pixel(x, y, PixelColor(10, 10, 10));
+            }
+        }
         loop {
             asm!("hlt");
         }
     }
 }
 
+#[lang = "eh_personality"]
+fn eh_personality() {}
+
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {
-        unsafe {
-            asm!("hlt");
-        }
-    }
+fn panic(_info: &PanicInfo) -> ! {
+    loop {}
 }
