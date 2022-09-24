@@ -1,3 +1,5 @@
+use crate::ascii::FONTS;
+
 #[derive(Debug, Copy, Clone)]
 pub enum PixelFormat {
     // Each pixel is 32-bit long, with 24-bit RGB, and the last byte is reserved.
@@ -125,6 +127,17 @@ impl Graphics {
         let pixel_index = y * (self.mi.stride as usize) + x;
         let base = 4 * pixel_index;
         (self.pixel_writer)(&mut self.fb, base, color);
+    }
+
+    pub fn putchar(&mut self, x: usize, y: usize, c: char) {
+        let string = FONTS[c as usize];
+        for (dy, line) in string.iter().enumerate() {
+            for dx in 0..8 {
+                if (line << dx) & 0x80 != 0 {
+                    unsafe { self.write_pixel(x + dx, y + dy, PixelColor(136, 233, 84)) };
+                }
+            }
+        }
     }
 
     pub fn resolution(&self) -> (usize, usize) {
