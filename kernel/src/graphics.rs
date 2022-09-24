@@ -91,6 +91,7 @@ pub struct Graphics {
 }
 
 impl Graphics {
+    // 初期化用のメソッド
     pub fn new(fb: FrameBuffer, mi: ModeInfo) -> Self {
         unsafe fn write_pixel_rgb(fb: &mut FrameBuffer, index: usize, rgb: PixelColor) {
             fb.write_value(index, [rgb.0, rgb.1, rgb.2]);
@@ -98,6 +99,8 @@ impl Graphics {
         unsafe fn write_pixel_bgr(fb: &mut FrameBuffer, index: usize, rgb: PixelColor) {
             fb.write_value(index, [rgb.2, rgb.1, rgb.0]);
         }
+
+        // pixel_writterに関数を登録(フォーマットが異なる際に使用する関数も変更する)
         let pixel_writer = match mi.format {
             PixelFormat::Rgb => write_pixel_rgb,
             PixelFormat::Bgr => write_pixel_bgr,

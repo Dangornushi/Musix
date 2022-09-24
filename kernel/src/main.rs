@@ -22,7 +22,7 @@ extern "C" fn kernel_main(fb: *mut FrameBuffer, mi: *mut ModeInfo) {
     let mi = unsafe { *mi };
     let mut console = Graphics::new(fb, mi);
     let (width, height) = (&console).resolution();
-    let div = 8;
+    let _div = 8;
 
     background_render(width, height, &mut console);
 
