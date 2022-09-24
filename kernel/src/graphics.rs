@@ -140,6 +140,21 @@ impl Graphics {
         }
     }
 
+    pub fn print(&mut self, x: usize, mut y: usize, word: &str) {
+        let mut add_str = 1;
+        const w_distance: usize = 8;
+
+        for c in word.chars() {
+            if c == '\n' {
+                add_str = 1;
+                y += 16;
+                continue;
+            }
+            self.putchar(x + w_distance * add_str, y, c);
+            add_str += 1;
+        }
+    }
+
     pub fn resolution(&self) -> (usize, usize) {
         self.mi.resolution()
     }
