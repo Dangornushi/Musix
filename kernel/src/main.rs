@@ -8,19 +8,24 @@ use core::panic::PanicInfo;
 
 use kernel::graphics::{FrameBuffer, Graphics, ModeInfo, PixelColor};
 
+unsafe fn background_render(w: usize, h: usize, mut graphics: Graphics) {
+    for y in 0..(h) {
+        for x in 0..(w) {
+            graphics.write_pixel(x, y, PixelColor(10, 10, 10));
+        }
+    }
+}
+
 #[no_mangle]
 extern "C" fn kernel_main(fb: *mut FrameBuffer, mi: *mut ModeInfo) {
     let fb = unsafe { *fb };
     let mi = unsafe { *mi };
-    let mut graphics = Graphics::new(fb, mi);
-    let (width, height) = graphics.resolution();
+    let mut console = Graphics::new(fb, mi);
+    let (width, height) = console.resolution();
 
     unsafe {
-        for y in 0..(height) {
-            for x in 0..(width) {
-                graphics.write_pixel(x, y, PixelColor(10, 10, 10));
-            }
-        }
+        background_render(width, height, console);
+        //console.print(0, 0);
         loop {
             asm!("hlt");
         }
