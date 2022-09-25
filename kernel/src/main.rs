@@ -6,6 +6,7 @@ extern crate rlibc;
 use core::arch::asm;
 use core::panic::PanicInfo;
 
+use kernel::console::Console;
 use kernel::graphics::{FrameBuffer, Graphics, ModeInfo, PixelColor};
 
 fn background_render(w: usize, h: usize, graphics: &mut Graphics) {
@@ -20,15 +21,11 @@ fn background_render(w: usize, h: usize, graphics: &mut Graphics) {
 extern "C" fn kernel_main(fb: *mut FrameBuffer, mi: *mut ModeInfo) {
     let fb = unsafe { *fb };
     let mi = unsafe { *mi };
-    let mut console = Graphics::new(fb, mi);
-    let (width, height) = (&console).resolution();
-    let _div = 8;
-
-    background_render(width, height, &mut console);
+    let mut console = Console::new(fb, mi);
 
     let word: &str = "Hello, Musix!\n$ ";
 
-    console.print(100, 100, word, PixelColor(136, 233, 84));
+    console.print(word);
 
     unsafe {
         loop {

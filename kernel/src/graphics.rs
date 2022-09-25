@@ -85,6 +85,7 @@ impl FrameBuffer {
 #[derive(Debug, Copy, Clone)]
 pub struct PixelColor(pub u8, pub u8, pub u8); // RGB
 
+#[derive(Copy, Clone)]
 pub struct Graphics {
     fb: FrameBuffer,
     mi: ModeInfo,
