@@ -82,6 +82,7 @@ impl FrameBuffer {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct PixelColor(pub u8, pub u8, pub u8); // RGB
 
 pub struct Graphics {
@@ -132,20 +133,20 @@ impl Graphics {
         (self.pixel_writer)(&mut self.fb, base, color);
     }
 
-    pub fn putchar(&mut self, x: usize, y: usize, c: char) {
+    pub fn putchar(&mut self, x: usize, y: usize, c: char, color: PixelColor) {
         let string = FONTS[c as usize];
         for (dy, line) in string.iter().enumerate() {
             for dx in 0..8 {
                 if (line << dx) & 0x80 != 0 {
-                    unsafe { self.write_pixel(x + dx, y + dy, PixelColor(136, 233, 84)) };
+                    unsafe { self.write_pixel(x + dx, y + dy, color) };
                 }
             }
         }
     }
 
-    pub fn print(&mut self, x: usize, mut y: usize, word: &str) {
+    pub fn print(&mut self, x: usize, mut y: usize, word: &str, color: PixelColor) {
         let mut add_str = 1;
-        const w_distance: usize = 8;
+        const W_DISTANCE: usize = 8;
 
         for c in word.chars() {
             if c == '\n' {
@@ -153,7 +154,7 @@ impl Graphics {
                 y += 16;
                 continue;
             }
-            self.putchar(x + w_distance * add_str, y, c);
+            self.putchar(x + W_DISTANCE * add_str, y, c, color);
             add_str += 1;
         }
     }

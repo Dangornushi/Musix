@@ -28,7 +28,7 @@ extern "C" fn kernel_main(fb: *mut FrameBuffer, mi: *mut ModeInfo) {
 
     let word: &str = "Hello, Musix!\n$ ";
 
-    console.print(100, 100, word);
+    console.print(100, 100, word, PixelColor(136, 233, 84));
 
     unsafe {
         loop {
