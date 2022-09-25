@@ -1,5 +1,5 @@
 use crate::graphics::{FrameBuffer, Graphics, ModeInfo, PixelColor};
-
+use x86_64::instructions::port::{PortReadOnly, PortWriteOnly};
 #[derive(Copy, Clone)]
 
 pub struct Console {
@@ -28,5 +28,13 @@ impl Console {
 
     pub fn print(&mut self, word: &str) {
         (self.console_graphic).print(self.cursor_x, self.cursor_y, word, self.font_color);
+    }
+
+    pub fn background_render(&mut self) {
+        for y in 0..(self.h) {
+            for x in 0..(self.w) {
+                unsafe { self.console_graphic.write_pixel(x, y, self.back_color) };
+            }
+        }
     }
 }

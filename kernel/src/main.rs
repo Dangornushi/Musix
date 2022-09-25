@@ -25,6 +25,7 @@ extern "C" fn kernel_main(fb: *mut FrameBuffer, mi: *mut ModeInfo) {
 
     let word: &str = "Hello, Musix!\n$ ";
 
+    console.background_render();
     console.print(word);
 
     unsafe {
