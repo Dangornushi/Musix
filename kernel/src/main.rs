@@ -23,10 +23,7 @@ extern "C" fn kernel_main(fb: *mut FrameBuffer, mi: *mut ModeInfo) {
     let mi = unsafe { *mi };
     let mut console = Console::new(fb, mi);
 
-    let word: &str = "Hello, Musix!\n$ ";
-
-    console.background_render();
-    console.print(word);
+    console.start();
 
     unsafe {
         loop {
