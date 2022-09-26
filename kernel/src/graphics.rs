@@ -145,17 +145,17 @@ impl Graphics {
         }
     }
 
-    pub fn print(&mut self, x: usize, mut y: usize, word: &str, color: PixelColor) {
+    pub fn print(&mut self, x: usize, y: &mut usize, word: &str, color: PixelColor) {
         let mut add_str = 1;
         const W_DISTANCE: usize = 8;
 
         for c in word.chars() {
             if c == '\n' {
                 add_str = 1;
-                y += 16;
+                *y += 18;
                 continue;
             }
-            self.putchar(x + W_DISTANCE * add_str, y, c, color);
+            self.putchar(x + W_DISTANCE * add_str, *y, c, color);
             add_str += 1;
         }
     }

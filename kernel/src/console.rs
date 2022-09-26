@@ -26,25 +26,11 @@ impl Console {
         }
     }
 
-    pub fn start(&mut self) {
-        self.background_render();
-        self.print(
-            "
- /$$      /$$                     /$$          
-| $$$    /$$$                    |__/          
-| $$$$  /$$$$ /$$   /$$  /$$$$$$$ /$$ /$$   /$$
-| $$ $$/$$ $$| $$  | $$ /$$_____/| $$|  $$ /$$/
-| $$  $$$| $$| $$  | $$|  $$$$$$ | $$ \\  $$$$/ 
-| $$\\  $ | $$| $$  | $$ \\____  $$| $$  >$$  $$ 
-| $$ \\/  | $$|  $$$$$$/ /$$$$$$$/| $$ /$$/\\  $$
-|__/     |__/ \\______/ |_______/ |__/|__/  \\__/                                   
-
-$ ",
-        );
-    }
+    pub fn start(&mut self) {}
 
     pub fn print(&mut self, word: &str) {
-        (self.console_graphic).print(self.cursor_x, self.cursor_y, word, self.font_color);
+        (self.console_graphic).print(self.cursor_x, &mut self.cursor_y, word, self.font_color);
+        self.cursor_y += 18;
     }
 
     pub fn background_render(&mut self) {
