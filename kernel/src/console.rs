@@ -1,7 +1,12 @@
 use crate::graphics::{FrameBuffer, Graphics, ModeInfo, PixelColor};
+use crate::println;
+use core::fmt;
+use core::{fmt::Write, mem::MaybeUninit};
 use x86_64::instructions::port::{PortReadOnly, PortWriteOnly};
-#[derive(Copy, Clone)]
 
+static mut RAW_CONSOLE: MaybeUninit<Console> = MaybeUninit::<Console>::uninit();
+
+#[derive(Copy, Clone)]
 pub struct Console {
     cursor_x: usize,
     cursor_y: usize,
@@ -26,7 +31,25 @@ impl Console {
         }
     }
 
-    pub fn start(&mut self) {}
+    pub fn instance() -> &'static mut Console {
+        unsafe { &mut *RAW_CONSOLE.as_mut_ptr() }
+    }
+
+    pub fn start(&mut self) {
+        let ascii: &str = "
+ /$$      /$$                     /$$
+| $$$    /$$$                    |__/
+| $$$$  /$$$$ /$$   /$$  /$$$$$$$ /$$ /$$   /$$
+| $$ $$/$$ $$| $$  | $$ /$$_____/| $$|  $$ /$$/
+| $$  $$$| $$| $$  | $$|  $$$$$$ | $$ \\  $$$$/
+| $$\\  $| $$| $$  | $$ \\____  $$| $$  >$$  $$
+| $$ \\/| $$ |  $$$$$$/ /$$$$$$$/| $$ /$$/\\  $$
+|__/    |__/ \\______/ |_______/ |__/|__/  \\__/\n 
+";
+
+        self.background_render();
+        self.print(ascii);
+    }
 
     pub fn print(&mut self, word: &str) {
         (self.console_graphic).print(self.cursor_x, &mut self.cursor_y, word, self.font_color);
@@ -39,5 +62,12 @@ impl Console {
                 unsafe { self.console_graphic.write_pixel(x, y, self.back_color) };
             }
         }
+    }
+}
+
+impl Write for Console {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.print(s);
+        Ok(())
     }
 }

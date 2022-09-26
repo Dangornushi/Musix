@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 rlibc = "1"
 x86_64 = "0.14.10"
+spin = { version = "0.9.0", features = ["lock_api", "mutex"] }
 
 [features]
