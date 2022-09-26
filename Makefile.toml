@@ -48,9 +48,9 @@ mount_msdos $disk ./mnt
 
 [tasks.disk-copy]
 script = '''
-sudo mkdir -p ./mnt/EFI/BOOT
-sudo cp ./bootloader/target/x86_64-unknown-uefi/debug/bootloader.efi ./mnt/EFI/BOOT/BOOTX64.EFI
-sudo cp ./kernel/kernel.elf ./mnt/kernel.elf
+mkdir -p ./mnt/EFI/BOOT
+cp ./bootloader/target/x86_64-unknown-uefi/debug/bootloader.efi ./mnt/EFI/BOOT/BOOTX64.EFI
+cp ./kernel/kernel.elf ./mnt/kernel.elf
 '''
 
 [tasks.prepare-ovmf]
@@ -93,7 +93,7 @@ qemu-system-x86_64 \
 [tasks.disk-umount]
 ignore_errors = true
 script = '''
-sudo umount ./mnt && rmdir ./mnt
+umount ./mnt && rmdir ./mnt
 hdiutil detach /dev/disk4
 '''
 
