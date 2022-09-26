@@ -16,14 +16,31 @@ impl Console {
     pub fn new(fb: FrameBuffer, mi: ModeInfo) -> Self {
         let (width, height) = mi.resolution();
         Self {
-            cursor_x: 0,
-            cursor_y: 0,
+            cursor_x: 10,
+            cursor_y: 10,
             w: width,
             h: height,
             back_color: PixelColor(10, 10, 10),
             font_color: PixelColor(136, 233, 84),
             console_graphic: Graphics::new(fb, mi),
         }
+    }
+
+    pub fn start(&mut self) {
+        self.background_render();
+        self.print(
+            "
+ /$$      /$$                     /$$          
+| $$$    /$$$                    |__/          
+| $$$$  /$$$$ /$$   /$$  /$$$$$$$ /$$ /$$   /$$
+| $$ $$/$$ $$| $$  | $$ /$$_____/| $$|  $$ /$$/
+| $$  $$$| $$| $$  | $$|  $$$$$$ | $$ \\  $$$$/ 
+| $$\\  $ | $$| $$  | $$ \\____  $$| $$  >$$  $$ 
+| $$ \\/  | $$|  $$$$$$/ /$$$$$$$/| $$ /$$/\\  $$
+|__/     |__/ \\______/ |_______/ |__/|__/  \\__/                                   
+
+$ ",
+        );
     }
 
     pub fn print(&mut self, word: &str) {
